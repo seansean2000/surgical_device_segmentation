@@ -1,11 +1,18 @@
 import xml.dom.minidom
 
 def handleXmlAnnotation(xmlAnnotationPath):
-    doc = xml.dom.minidom.parse(xmlAnnotationPath)
-    objDics = []
-    for obj in doc.getElementsByTagName("object"):
-        objDics.append( handleObjectTag(obj) )
-    return objDics
+
+    annotateDic = {'objects':[]}
+    
+    with xml.dom.minidom.parse(xmlAnnotationPath) as doc:
+        for obj in doc.getElementsByTagName("object"):
+            annotateDic["objects"].append(handleObjectTag(obj))
+        
+        annotateDic["folder"] = doc.getElementsByTagName("folder")[0].childNodes[0].data
+        annotateDic["filename"] = doc.getElementsByTagName("filename")[0].childNodes[0].data
+        annotateDic["path"] = doc.getElementsByTagName("path")[0].childNodes[0].data
+        
+    return annotateDic
 
 def handleObjectTag(objectElement):
     dic = {}
@@ -24,3 +31,7 @@ def getPoints(objectElement):
     
     return points
 
+def handleFolder(folderPath):
+    for fileName in glob.glob(os.path.join(folderPath,'*.xml')):
+        print(handleXmlAnnotation(fileName))
+    
