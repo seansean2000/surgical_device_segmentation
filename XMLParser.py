@@ -1,11 +1,18 @@
 import xml.dom.minidom
 
 def handleXmlAnnotation(xmlAnnotationPath):
-    doc = xml.dom.minidom.parse(xmlAnnotationPath)
-    objDics = []
-    for obj in doc.getElementsByTagName("object"):
-        objDics.append( handleObjectTag(obj) )
-    return objDics
+
+    annotateDic = {'objects':[]}
+    
+    with xml.dom.minidom.parse(xmlAnnotationPath) as doc:
+        for obj in doc.getElementsByTagName("object"):
+            annotateDic["objects"].append(handleObjectTag(obj))
+        
+        annotateDic["folder"] = doc.getElementsByTagName("folder")[0].childNodes[0].data
+        annotateDic["filename"] = doc.getElementsByTagName("filename")[0].childNodes[0].data
+        annotateDic["path"] = doc.getElementsByTagName("path")[0].childNodes[0].data
+        
+    return annotateDic
 
 def handleObjectTag(objectElement):
     dic = {}
@@ -24,3 +31,33 @@ def getPoints(objectElement):
     
     return points
 
+def handleFolder(folderPath, XMLarray):
+    for fileName in glob.glob(os.path.join(folderPath,'*.xml')):
+        XMLarray.append(handleXmlAnnotation(fileName))
+
+        
+def drawOutLine (singleXML, originalimg, saveLocation, imgName):
+    for obj in singleXML["objects"]:
+        pts = np.array([], np.int32)
+
+        for points in obj["points"]:
+            pts = np.append(pts, [int(points[0]), int(points[1])]) #points[0] = x coordinate, points[1] = y coordinate
+
+        pts = pts.reshape((-1,1,2))
+        cv2.polylines(originalimg, [pts], True, (0,255,0), thickness=3)
+        cv2.imwrite(os.path.join(saveLocation, imgName), originalimg)
+        
+        
+def segmentImageinFolder(saveLocation, XMLarray):
+    for singleXMLFile in XMLarray:
+        imgName = singleXMLFile["filename"]
+        img = cv2.imread('./data/'+imgName)
+        drawOutLine(singleXMLFile, img, saveLocation, imgName)
+        
+        
+saveLocation = './Segmented Images' #the location to save the modified images
+folderPath = "./data" #this location should store all the xml files and the corresponding images
+allXMLinFolder = [] #this is the array that will store all the XML files in the 'data' folder
+
+handleFolder(folderPath, allXMLinFolder)
+segmentImageinFolder(saveLocation, allXMLinFolder)
