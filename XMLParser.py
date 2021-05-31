@@ -31,7 +31,33 @@ def getPoints(objectElement):
     
     return points
 
-def handleFolder(folderPath):
+def handleFolder(folderPath, XMLarray):
     for fileName in glob.glob(os.path.join(folderPath,'*.xml')):
-        print(handleXmlAnnotation(fileName))
-    
+        XMLarray.append(handleXmlAnnotation(fileName))
+
+        
+def drawOutLine (singleXML, originalimg, saveLocation, imgName):
+    for obj in singleXML["objects"]:
+        pts = np.array([], np.int32)
+
+        for points in obj["points"]:
+            pts = np.append(pts, [int(points[0]), int(points[1])]) #points[0] = x coordinate, points[1] = y coordinate
+
+        pts = pts.reshape((-1,1,2))
+        cv2.polylines(originalimg, [pts], True, (0,255,0), thickness=3)
+        cv2.imwrite(os.path.join(saveLocation, imgName), originalimg)
+        
+        
+def segmentImageinFolder(saveLocation, XMLarray):
+    for singleXMLFile in XMLarray:
+        imgName = singleXMLFile["filename"]
+        img = cv2.imread('./data/'+imgName)
+        drawOutLine(singleXMLFile, img, saveLocation, imgName)
+        
+        
+saveLocation = './Segmented Images' #the location to save the modified images
+folderPath = "./data" #this location should store all the xml files and the corresponding images
+allXMLinFolder = [] #this is the array that will store all the XML files in the 'data' folder
+
+handleFolder(folderPath, allXMLinFolder)
+segmentImageinFolder(saveLocation, allXMLinFolder)
