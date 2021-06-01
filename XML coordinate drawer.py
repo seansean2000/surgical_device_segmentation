@@ -38,13 +38,14 @@ def handleFolder(folderPath, XMLarray):
         
 def drawOutLine (singleXML, originalimg, saveLocation, imgName):
     for obj in singleXML["objects"]:
-        pts = np.array([], np.int32)
+        ptsArray = []
 
         for points in obj["points"]:
-            pts = np.append(pts, [int(points[0]), int(points[1])]) #points[0] = x coordinate, points[1] = y coordinate
+            ptsArray.append([int(points[0]), int(points[1])]) #points[0] = x coordinate, points[1] = y coordinate
 
-        pts = pts.reshape((-1,1,2))
-        cv2.polylines(originalimg, [pts], True, (0,255,0), thickness=3)
+        ptsNumpy = np.array(ptsArray)
+        ptsNumpy = ptsNumpy.reshape((-1,1,2))
+        cv2.polylines(originalimg, [ptsNumpy], True, (0,255,0), thickness=3)
         cv2.imwrite(os.path.join(saveLocation, imgName), originalimg)
         
         

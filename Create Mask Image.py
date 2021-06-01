@@ -53,17 +53,20 @@ def handleFolder(folderPath, XMLarray):
         
 def fillOutLine (singleXML, originalimg, saveLocation, imgName):
     for obj in singleXML["objects"]:
-        pts = np.array([], np.int32)
+        ptsArray = []
         for points in obj["points"]:
-            pts = np.append(pts, [int(points[0]), int(points[1])]) #points[0] = x coordinate, points[1] = y coordinate
+            ptsArray.append([int(points[0]), int(points[1])]) #points[0] = x coordinate, points[1] = y coordinate
+            
         
         try:
             mask_color = surgical_tools.index(obj["name"]) + 231 #"Obturator" will have color (231,231,231) and Cautery Hook will be 255
         except Exception as e:
             mask_color = 100
             print(e)
-        pts = pts.reshape((-1,1,2))
-        cv2.fillPoly(originalimg, [pts], [mask_color, mask_color, mask_color])
+        
+        ptsNumpy = np.array(ptsArray)
+        ptsNumpy = ptsNumpy.reshape((-1,1,2))
+        cv2.fillPoly(originalimg, [ptsNumpy], [mask_color, mask_color, mask_color])
         
     cv2.imwrite(os.path.join(saveLocation, imgName), originalimg)
 
